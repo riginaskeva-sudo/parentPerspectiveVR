@@ -5,9 +5,9 @@
 <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial}
-#start{position:fixed;z-index:5;top:3%;left:4%;width:92%;max-width:520px;background:#fff;color:#18212b;padding:14px;box-sizing:border-box;border-radius:12px;text-align:center}
+#start{position:fixed;z-index:5;top:3%;left:4%;width:92%;max-width:520px;background:rgba(250,248,244,.96);color:#263b3a;padding:18px;box-sizing:border-box;border:1px solid rgba(120,147,142,.35);border-radius:18px;text-align:center;box-shadow:0 14px 38px rgba(28,48,48,.22)}
 button,select{font-size:16px;padding:10px;margin:5px;border-radius:8px}
-button{background:#245b73;color:white;border:0;width:85%}
+button{background:#557f7a;color:white;border:0;width:85%;font-weight:600;box-shadow:0 4px 12px rgba(30,60,58,.18)}
 #note{font-size:12px;color:#555}
 </style></head><body>
 <div id="start"><h2>Μπες στη θέση του παιδιού μου</h2>
@@ -24,30 +24,77 @@ button{background:#245b73;color:white;border:0;width:85%}
 <canvas id="cv-l1" width="1200" height="220"></canvas>
 <canvas id="cv-l2" width="1200" height="220"></canvas>
 </div>
-<a-scene vr-mode-ui="enabled:true" background="color:#dbe7e8">
-<a-plane rotation="-90 0 0" width="9" height="9" color="#d6c7b4"></a-plane>
-<a-plane position="0 2.5 -4.5" width="9" height="5" color="#e9e1d7"></a-plane>
-<a-plane position="-4.5 2.5 0" rotation="0 90 0" width="9" height="5" color="#e5ddd2"></a-plane>
-<a-plane position="4.5 2.5 0" rotation="0 -90 0" width="9" height="5" color="#e5ddd2"></a-plane>
-<a-box position="0 .8 -2.5" width="2.4" height=".12" depth=".8" color="#946b4d"></a-box>
-<a-box position="0 .4 -2.5" width="2.2" height=".7" depth=".7" color="#d5d0c7"></a-box>
-<a-cylinder position="0 .9 -1.2" radius=".5" height=".08" color="#946b4d"></a-cylinder>
-<!-- parent placeholder -->
-<a-entity position="-.8 0 -2">
-<a-cylinder position="0 1.05 0" radius=".27" height=".78" color="#557d91"></a-cylinder>
-<a-sphere position="0 1.62 0" radius=".22" color="#d7a17c"></a-sphere>
-<a-sphere position="0 1.69 -.16" scale="1 1 .35" radius=".22" color="#49372f"></a-sphere>
-<a-cylinder position="-.13 .35 0" radius=".09" height=".65" color="#344454"></a-cylinder>
-<a-cylinder position=".13 .35 0" radius=".09" height=".65" color="#344454"></a-cylinder></a-entity>
-<!-- child placeholder -->
-<a-entity position=".85 0 -.95">
-<a-cylinder position="0 .72 0" radius=".22" height=".58" color="#d18b4e"></a-cylinder>
-<a-sphere position="0 1.18 0" radius=".19" color="#e0ad88"></a-sphere>
-<a-sphere position="0 1.24 -.14" scale="1 1 .4" radius=".19" color="#5a4031"></a-sphere>
-<a-cylinder position="-.1 .23 0" radius=".07" height=".4" color="#405b76"></a-cylinder>
-<a-cylinder position=".1 .23 0" radius=".07" height=".4" color="#405b76"></a-cylinder></a-entity>
-<a-entity light="type:ambient;intensity:.85"></a-entity>
-<a-entity light="type:directional;intensity:.8" position="-2 5 3"></a-entity>
+<a-scene vr-mode-ui="enabled:true" background="color:#dce8e7">
+<!-- Cozy family living room: decorative environment only; camera and interaction remain unchanged -->
+<a-plane rotation="-90 0 0" width="10" height="10" material="color:#d7c5ad;roughness:1"></a-plane>
+<a-plane position="0 2.55 -4.5" width="10" height="5.1" material="color:#eee6dc;roughness:1"></a-plane>
+<a-plane position="-5 2.55 0" rotation="0 90 0" width="9" height="5.1" material="color:#e6ddd2;roughness:1"></a-plane>
+<a-plane position="5 2.55 0" rotation="0 -90 0" width="9" height="5.1" material="color:#e6ddd2;roughness:1"></a-plane>
+<!-- skirting and warm rug -->
+<a-box position="0 .08 -4.43" width="9.8" height=".16" depth=".08" color="#b99c80"></a-box>
+<a-plane position="0 .012 -2.15" rotation="-90 0 0" width="4.4" height="2.8" material="color:#b8c9c3;roughness:1"></a-plane>
+<a-cylinder position="0 .025 -2.15" rotation="90 0 0" radius=".08" height=".01" color="#d9e2dc"></a-cylinder>
+<!-- large soft daylight window on back wall -->
+<a-box position="0 2.65 -4.43" width="2.5" height="1.65" depth=".08" color="#9b806b"></a-box>
+<a-plane position="0 2.65 -4.375" width="2.32" height="1.47" material="color:#b9d9df;emissive:#789ba4;emissiveIntensity:.12;shader:standard"></a-plane>
+<a-box position="0 2.65 -4.32" width=".055" height="1.5" depth=".035" color="#f4eee5"></a-box>
+<a-box position="0 2.65 -4.32" width="2.35" height=".055" depth=".035" color="#f4eee5"></a-box>
+<!-- curtains -->
+<a-box position="-1.35 2.65 -4.30" width=".25" height="1.9" depth=".12" color="#c58e79"></a-box>
+<a-box position="1.35 2.65 -4.30" width=".25" height="1.9" depth=".12" color="#c58e79"></a-box>
+<!-- sofa and cushions -->
+<a-box position="0 0.48 -3.35" width="3.0" height=".65" depth=".72" radius=".12" color="#78938e"></a-box>
+<a-box position="0 .93 -3.62" width="3.0" height=".45" depth=".28" color="#6f8984"></a-box>
+<a-box position="-1.28 .92 -3.28" width=".42" height=".72" depth=".78" color="#6f8984"></a-box>
+<a-box position="1.28 .92 -3.28" width=".42" height=".72" depth=".78" color="#6f8984"></a-box>
+<a-box position="-.85 .78 -2.98" width=".58" height=".42" depth=".12" rotation="0 0 -8" color="#d7b6a4"></a-box>
+<a-box position=".78 .78 -2.98" width=".58" height=".42" depth=".12" rotation="0 0 8" color="#e4d5b8"></a-box>
+<!-- side table and lamp -->
+<a-cylinder position="-2.25 .38 -2.65" radius=".38" height=".08" color="#9b7658"></a-cylinder>
+<a-cylinder position="-2.25 .2 -2.65" radius=".055" height=".36" color="#9b7658"></a-cylinder>
+<a-cylinder position="-2.25 .82 -2.65" radius=".16" height=".34" color="#e7d8c4"></a-cylinder>
+<a-cone position="-2.25 1.08 -2.65" radius-bottom=".27" radius-top=".12" height=".35" color="#e9cda4"></a-cone>
+<!-- bookshelf on left wall -->
+<a-box position="-4.55 1.55 -1.6" rotation="0 90 0" width="1.5" height="2.3" depth=".42" color="#a77d5d"></a-box>
+<a-box position="-4.30 .85 -1.6" rotation="0 90 0" width="1.35" height=".07" depth=".36" color="#d2b18e"></a-box>
+<a-box position="-4.30 1.5 -1.6" rotation="0 90 0" width="1.35" height=".07" depth=".36" color="#d2b18e"></a-box>
+<a-box position="-4.30 2.15 -1.6" rotation="0 90 0" width="1.35" height=".07" depth=".36" color="#d2b18e"></a-box>
+<a-box position="-4.45 1.12 -1.78" width=".12" height=".48" depth=".12" color="#d18a63"></a-box>
+<a-box position="-4.35 1.12 -1.61" width=".12" height=".48" depth=".12" color="#e3c17e"></a-box>
+<a-box position="-4.25 1.12 -1.45" width=".12" height=".48" depth=".12" color="#78938e"></a-box>
+<!-- plant in right corner -->
+<a-cylinder position="3.55 .35 -3.45" radius=".28" height=".55" color="#b87958"></a-cylinder>
+<a-cylinder position="3.55 .95 -3.45" radius=".035" height=".9" color="#66866b"></a-cylinder>
+<a-sphere position="3.25 1.05 -3.45" scale=".35 .58 .18" color="#789a78"></a-sphere>
+<a-sphere position="3.83 1.15 -3.45" scale=".35 .58 .18" color="#86a884"></a-sphere>
+<a-sphere position="3.55 1.35 -3.45" scale=".32 .58 .18" color="#6f9272"></a-sphere>
+<!-- parent character -->
+<a-entity position="-.82 0 -2.05">
+  <a-cylinder position="0 1.03 0" radius=".29" height=".78" color="#6f91a2"></a-cylinder>
+  <a-sphere position="0 1.58 0" radius=".235" color="#d9a27f"></a-sphere>
+  <a-sphere position="0 1.68 -.16" scale="1.05 1 .42" radius=".23" color="#49372f"></a-sphere>
+  <a-sphere position="-.09 1.59 -.205" scale=".06 .045 .025" color="#49372f"></a-sphere>
+  <a-sphere position=".09 1.59 -.205" scale=".06 .045 .025" color="#49372f"></a-sphere>
+  <a-cylinder position="-.13 .35 0" radius=".095" height=".65" color="#45566a"></a-cylinder>
+  <a-cylinder position=".13 .35 0" radius=".095" height=".65" color="#45566a"></a-cylinder>
+  <a-sphere position="-.34 1.0 0" scale=".12 .32 .12" rotation="0 0 -18" color="#d9a27f"></a-sphere>
+  <a-sphere position=".34 1.0 0" scale=".12 .32 .12" rotation="0 0 18" color="#d9a27f"></a-sphere>
+</a-entity>
+<!-- child character -->
+<a-entity position=".88 0 -1.45">
+  <a-cylinder position="0 .72 0" radius=".235" height=".6" color="#d18b5e"></a-cylinder>
+  <a-sphere position="0 1.16 0" radius=".205" color="#e0ad88"></a-sphere>
+  <a-sphere position="0 1.24 -.14" scale="1.04 1 .42" radius=".205" color="#5a4031"></a-sphere>
+  <a-sphere position="-.075 1.17 -.18" scale=".045 .035 .02" color="#49372f"></a-sphere>
+  <a-sphere position=".075 1.17 -.18" scale=".045 .035 .02" color="#49372f"></a-sphere>
+  <a-cylinder position="-.105 .23 0" radius=".075" height=".4" color="#536f8c"></a-cylinder>
+  <a-cylinder position=".105 .23 0" radius=".075" height=".4" color="#536f8c"></a-cylinder>
+  <a-sphere position="-.27 .7 0" scale=".09 .24 .09" rotation="0 0 -18" color="#e0ad88"></a-sphere>
+  <a-sphere position=".27 .7 0" scale=".09 .24 .09" rotation="0 0 18" color="#e0ad88"></a-sphere>
+</a-entity>
+<a-entity light="type:ambient;intensity:.92"></a-entity>
+<a-entity light="type:directional;intensity:.72" position="-2 5 3"></a-entity>
+<a-entity light="type:point;intensity:.35;distance:8" position="0 3 -2"></a-entity>
 
 <a-entity id="rig" position="0 1.15 .65"><a-camera wasd-controls-enabled="false" look-controls="enabled:true;mouseEnabled:true;touchEnabled:true">
 <a-entity id="gazeCursor" cursor="fuse:true;fuseTimeout:1500"
