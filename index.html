@@ -50,17 +50,21 @@ button{background:#245b73;color:white;border:0;width:85%}
 <a-entity light="type:directional;intensity:.8" position="-2 5 3"></a-entity>
 
 <a-entity id="rig" position="0 1.15 .65"><a-camera wasd-controls-enabled="false" look-controls="enabled:true;mouseEnabled:true;touchEnabled:true">
-<a-entity id="gazeCursor" cursor="rayOrigin:entity;fuse:false" raycaster="objects:.gazeable;far:8" gaze-dwell="duration:1500"></a-entity>
+<a-entity cursor="fuse:true;fuseTimeout:1500"
+ raycaster="objects:.gazeable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:.008;radiusOuter:.014" material="color:white;shader:flat"></a-entity>
 <a-entity id="mouseCursor" cursor="rayOrigin:mouse" raycaster="objects:.gazeable;far:8"></a-entity>
 <a-entity position="0 .28 -1.6">
 <a-plane width="1.95" height=".88" position="0 0 0" color="#172b38" opacity=".94"></a-plane>
 <a-plane id="title" width="1.82" height=".24" position="0 .29 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane>
 <a-plane id="message" width="1.82" height=".53" position="0 -.12 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
-<a-entity id="choices" position="0 -.78 -1.55">
-<a-entity id="c0" class="gazeable" position="0 .28 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:0"><a-plane id="l0" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
-<a-entity id="c1" class="gazeable" position="0 -.04 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:1"><a-plane id="l1" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
-<a-entity id="c2" class="gazeable" position="0 -.36 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:2"><a-plane id="l2" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
-</a-entity></a-camera></a-entity></a-scene>
+</a-camera></a-entity>
+<!-- Οι επιλογές είναι σταθερές στον χώρο και όχι δεμένες στην κάμερα,
+     ώστε να μπορεί ο χρήστης να τις στοχεύει με την κίνηση του κεφαλιού. -->
+<a-entity id="choices" position="0 1.15 -1.35">
+<a-entity id="c0" class="gazeable" position="0 .34 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:0"><a-plane id="l0" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+<a-entity id="c1" class="gazeable" position="0 0 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:1"><a-plane id="l1" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+<a-entity id="c2" class="gazeable" position="0 -.34 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:2"><a-plane id="l2" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+</a-entity></a-scene>
 
 <script>
 const opening={kindergarten:"Δεν θέλω να ξαναπάω στο σχολείο. Η κυρία μου φώναξε!",primary:"Δεν ξαναπάω σχολείο. Η κυρία μου μίλησε άσχημα.",adolescent:"Δεν πρόκειται να ξαναπάω στο σχολείο. Η καθηγήτρια με πρόσβαλε μπροστά σε όλους."};
@@ -115,7 +119,23 @@ function text(heading, message) {
   paint("cv-title", heading, 62, 1);
   paint("cv-message", message, 42, 5);
 }
+function placeChoices() {
+  // Τοποθέτησε το μενού μπροστά από την τρέχουσα θέση/κατεύθυνση της κάμερας,
+  // αλλά άφησέ το σταθερό όσο ο χρήστης στρέφει το κεφάλι του.
+  const parentPose = ["parent", "reaction", "second", "reflection", "end"].includes(stage);
+  const x = parentPose ? -1 : 0;
+  const y = parentPose ? 1.5 : 1.15;
+  const z = parentPose ? .45 : .65;
+  const yaw = parentPose ? 28 : 0;
+  const rad = yaw * Math.PI / 180;
+  const distance = 2.0;
+  const px = x - Math.sin(rad) * distance;
+  const pz = z - Math.cos(rad) * distance;
+  $("choices").setAttribute("position", `${px} ${y} ${pz}`);
+  $("choices").setAttribute("rotation", `0 ${yaw} 0`);
+}
 function buttons(arr, fn) {
+  placeChoices();
   for (let i = 0; i < 3; i++) {
     const active = i < arr.length && !!arr[i];
     $("c" + i).setAttribute("visible", active);
@@ -136,43 +156,6 @@ function secondStep(){stage="second";text("Μια δεύτερη ευκαιρί�
 function reflection(){stage="reflection";let f=secondChoice===1?"Η απάντηση αναγνωρίζει το συναίσθημα και αφήνει χώρο στο παιδί να εκφραστεί.":secondChoice===0?"Ίσως το παιδί νιώθει ότι το συναίσθημά του δεν αναγνωρίστηκε.":"Ίσως το παιδί αισθάνεται ότι πρέπει να απολογηθεί.";text("Σκέψου την επικοινωνία",f+"\n\nΤι θα μπορούσες να δοκιμάσεις στην καθημερινότητά σου;");buttons(["Ολοκλήρωση","",""],finish);}
 function finish(){stage="end";log("complete","yes");text("Ολοκλήρωση","Ευχαριστούμε για τη συμμετοχή. Εξήγαγε το CSV για να αποθηκεύσεις τις επιλογές.");buttons(["Εξαγωγή CSV","",""],download);}
 function download(){let csv="event,value,age,elapsed\n"+events.map(e=>[e.event,e.value,e.age,e.elapsed].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="parent-perspective-demo.csv";a.click();URL.revokeObjectURL(a.href);}
-
-AFRAME.registerComponent("gaze-dwell", {
-  schema: { duration: { type: "number", default: 1500 } },
-  init: function () {
-    this.target = null;
-    this.startedAt = 0;
-    this.fired = false;
-  },
-  tick: function (time) {
-    const ray = this.el.components.raycaster;
-    const hits = ray ? ray.intersections : [];
-    let next = null;
-    for (let i = 0; i < hits.length; i++) {
-      const candidate = hits[i].object && hits[i].object.el;
-      if (candidate && candidate.classList && candidate.classList.contains("gazeable")) {
-        next = candidate;
-        break;
-      }
-    }
-    if (next !== this.target) {
-      if (this.target) this.target.setAttribute("material", "color", "#245b73");
-      this.target = next;
-      this.startedAt = time;
-      this.fired = false;
-      if (this.target) this.target.setAttribute("material", "color", "#3b829b");
-    }
-    if (this.target && !this.fired && time - this.startedAt >= this.data.duration) {
-      this.fired = true;
-      this.target.emit("click", {}, false);
-    }
-    if (!this.target) {
-      this.startedAt = 0;
-      this.fired = false;
-    }
-  }
-});
-
 AFRAME.registerComponent("gaze-choice",{schema:{index:{type:"int",default:0}},init(){this.el.addEventListener("click",()=>{if(this.el.getAttribute("visible")&&window.action){if(stage==="parent"||stage==="second")window.action(this.data.index);else if(this.data.index===0)window.action();}});this.el.addEventListener("mouseenter",()=>this.el.setAttribute("material","color","#3b829b"));this.el.addEventListener("mouseleave",()=>this.el.setAttribute("material","color","#245b73"));}});
 
 const sceneEl = document.querySelector("a-scene");
