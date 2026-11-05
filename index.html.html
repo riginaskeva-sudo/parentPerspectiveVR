@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Parent Perspective VR</title>
+<script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial}
+#start{position:fixed;z-index:5;top:3%;left:4%;width:92%;max-width:520px;background:#fff;color:#18212b;padding:14px;box-sizing:border-box;border-radius:12px;text-align:center}
+button,select{font-size:16px;padding:10px;margin:5px;border-radius:8px}
+button{background:#245b73;color:white;border:0;width:85%}
+#note{font-size:12px;color:#555}
+</style></head><body>
+<div id="start"><h2>Μπες στη θέση του παιδιού μου</h2>
+<p>Επίλεξε ηλικιακή ομάδα και ξεκίνα.</p>
+<select id="age"><option value="kindergarten">Νηπιαγωγείο</option><option value="primary" selected>Δημοτικό</option><option value="adolescent">Εφηβεία</option></select><br>
+<button id="start360">Έναρξη 360°</button><br><button id="startvr">Είσοδος σε VR</button>
+<p id="note">Για Cardboard δοκίμασε Chrome σε Android και HTTPS. Οι χαρακτήρες είναι προσωρινά απλά 3D σχήματα.</p></div>
+
+
+<div id="canvas-assets" style="display:none">
+<canvas id="cv-title" width="1200" height="180"></canvas>
+<canvas id="cv-message" width="1200" height="420"></canvas>
+<canvas id="cv-l0" width="1200" height="220"></canvas>
+<canvas id="cv-l1" width="1200" height="220"></canvas>
+<canvas id="cv-l2" width="1200" height="220"></canvas>
+</div>
+<a-scene vr-mode-ui="enabled:true" background="color:#dbe7e8">
+<a-plane rotation="-90 0 0" width="9" height="9" color="#d6c7b4"></a-plane>
+<a-plane position="0 2.5 -4.5" width="9" height="5" color="#e9e1d7"></a-plane>
+<a-plane position="-4.5 2.5 0" rotation="0 90 0" width="9" height="5" color="#e5ddd2"></a-plane>
+<a-plane position="4.5 2.5 0" rotation="0 -90 0" width="9" height="5" color="#e5ddd2"></a-plane>
+<a-box position="0 .8 -2.5" width="2.4" height=".12" depth=".8" color="#946b4d"></a-box>
+<a-box position="0 .4 -2.5" width="2.2" height=".7" depth=".7" color="#d5d0c7"></a-box>
+<a-cylinder position="0 .9 -1.2" radius=".5" height=".08" color="#946b4d"></a-cylinder>
+<!-- parent placeholder -->
+<a-entity position="-.8 0 -2">
+<a-cylinder position="0 1.05 0" radius=".27" height=".78" color="#557d91"></a-cylinder>
+<a-sphere position="0 1.62 0" radius=".22" color="#d7a17c"></a-sphere>
+<a-sphere position="0 1.69 -.16" scale="1 1 .35" radius=".22" color="#49372f"></a-sphere>
+<a-cylinder position="-.13 .35 0" radius=".09" height=".65" color="#344454"></a-cylinder>
+<a-cylinder position=".13 .35 0" radius=".09" height=".65" color="#344454"></a-cylinder></a-entity>
+<!-- child placeholder -->
+<a-entity position=".85 0 -.95">
+<a-cylinder position="0 .72 0" radius=".22" height=".58" color="#d18b4e"></a-cylinder>
+<a-sphere position="0 1.18 0" radius=".19" color="#e0ad88"></a-sphere>
+<a-sphere position="0 1.24 -.14" scale="1 1 .4" radius=".19" color="#5a4031"></a-sphere>
+<a-cylinder position="-.1 .23 0" radius=".07" height=".4" color="#405b76"></a-cylinder>
+<a-cylinder position=".1 .23 0" radius=".07" height=".4" color="#405b76"></a-cylinder></a-entity>
+<a-entity light="type:ambient;intensity:.85"></a-entity>
+<a-entity light="type:directional;intensity:.8" position="-2 5 3"></a-entity>
+
+<a-entity id="rig" position="0 1.15 .65"><a-camera wasd-controls-enabled="false" look-controls="enabled:true;mouseEnabled:true;touchEnabled:true">
+<a-entity cursor="fuse:true;fuseTimeout:1500"
+ raycaster="objects:.gazeable;far:8" position="0 0 -1" geometry="primitive:ring;radiusInner:.008;radiusOuter:.014" material="color:white;shader:flat"></a-entity>
+<a-entity id="mouseCursor" cursor="rayOrigin:mouse" raycaster="objects:.gazeable;far:8"></a-entity>
+<a-entity position="0 .28 -1.6">
+<a-plane width="1.95" height=".88" position="0 0 0" color="#172b38" opacity=".94"></a-plane>
+<a-plane id="title" width="1.82" height=".24" position="0 .29 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane>
+<a-plane id="message" width="1.82" height=".53" position="0 -.12 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+<a-entity id="choices" position="0 -.78 -1.55">
+<a-entity id="c0" class="gazeable" position="0 .28 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:0"><a-plane id="l0" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+<a-entity id="c1" class="gazeable" position="0 -.04 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:1"><a-plane id="l1" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+<a-entity id="c2" class="gazeable" position="0 -.36 0" geometry="primitive:plane;width:1.8;height:.27" material="color:#245b73" gaze-choice="index:2"><a-plane id="l2" width="1.72" height=".27" position="0 0 .025" material="shader:flat;transparent:true;color:#ffffff"></a-plane></a-entity>
+</a-entity></a-camera></a-entity></a-scene>
+
+<script>
+const opening={kindergarten:"Δεν θέλω να ξαναπάω στο σχολείο. Η κυρία μου φώναξε!",primary:"Δεν ξαναπάω σχολείο. Η κυρία μου μίλησε άσχημα.",adolescent:"Δεν πρόκειται να ξαναπάω στο σχολείο. Η καθηγήτρια με πρόσβαλε μπροστά σε όλους."};
+const first=["Έλα τώρα, μην κάνεις έτσι. Πήγαινε να πλύνεις τα χέρια σου.","Μην ανησυχείς, θα μιλήσω εγώ στην κυρία σου.","Ακούω ότι στενοχωρήθηκες. Θέλεις να μου πεις τι έγινε;"];
+const second=["Μην το σκέφτεσαι, δεν έγινε τίποτα.","Καταλαβαίνω ότι ένιωσες άσχημα μπροστά στους συμμαθητές σου.","Γιατί δεν απάντησες στην κυρία;"];
+let age="primary",stage="intro",firstChoice=-1,secondChoice=-1,started=0,events=[];
+const $=id=>document.getElementById(id);
+
+const labelTextures = {};
+function bindLabelTexture(planeId, canvasId) {
+  const plane = document.getElementById(planeId);
+  const canvas = document.getElementById(canvasId);
+  if (!plane || !canvas || !plane.getObject3D("mesh")) return false;
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  const material = plane.getObject3D("mesh").material;
+  material.map = texture;
+  material.transparent = true;
+  material.color.set("#ffffff");
+  material.needsUpdate = true;
+  labelTextures[canvasId] = texture;
+  return true;
+}
+function paint(canvasId, value, fontSize, maxLines=5) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `600 ${fontSize}px Arial, sans-serif`;
+  const words = String(value || "").replace(/\n/g, " ").split(/\s+/);
+  const lines = [];
+  let line = "";
+  const maxWidth = canvas.width * 0.94;
+  for (const word of words) {
+    const candidate = line ? line + " " + word : word;
+    if (ctx.measureText(candidate).width > maxWidth && line) {
+      lines.push(line); line = word;
+    } else line = candidate;
+  }
+  if (line) lines.push(line);
+  const visibleLines = lines.slice(0, maxLines);
+  const lineHeight = fontSize * 1.25;
+  const firstY = canvas.height / 2 - ((visibleLines.length - 1) * lineHeight) / 2;
+  visibleLines.forEach((item, index) => ctx.fillText(item, canvas.width / 2, firstY + index * lineHeight));
+  const texture = labelTextures[canvasId];
+  if (texture) texture.needsUpdate = true;
+}
+function text(heading, message) {
+  paint("cv-title", heading, 62, 1);
+  paint("cv-message", message, 42, 5);
+}
+function buttons(arr, fn) {
+  for (let i = 0; i < 3; i++) {
+    const active = i < arr.length && !!arr[i];
+    $("c" + i).setAttribute("visible", active);
+    paint("cv-l" + i, arr[i] || "", 46, 2);
+  }
+  window.action = fn;
+}
+
+function log(event,value){events.push({event,value,age,elapsed:((performance.now()-started)/1000).toFixed(1)});}
+
+function move(parent){$("rig").setAttribute("animation__pos","property:position;to:"+(parent?"-1 1.5 .45":"0 1.15 .65")+";dur:800");$("rig").setAttribute("animation__rot","property:rotation;to:"+(parent?"0 28 0":"0 0 0")+";dur:800");}
+function intro(){stage="intro";text("Μπες στη θέση του παιδιού σου","Θα δεις μια δύσκολη στιγμή από δύο οπτικές γωνίες. Δεν υπάρχει βαθμολογία. Επίλεξε την απάντηση που θα σου ερχόταν αυθόρμητα.");buttons(["Έναρξη","",""],childView);}
+function childView(){stage="child";move(false);text("Η οπτική του παιδιού",opening[age]+"\n\nΠώς μπορεί να αισθάνεται;");buttons(["Αλλαγή οπτικής γωνίας","",""],parentView);}
+function parentView(){stage="parent";move(true);text("Η οπτική του γονέα","Το παιδί σου επιστρέφει αναστατωμένο και σου λέει:\n«"+opening[age]+"»\n\nΠώς θα απαντούσες αυθόρμητα;");buttons(first,chooseFirst);}
+function reaction(i){if(i===0)return "Καλά, άστο. Δεν θέλω να σου πω.";if(i===1)return "Δεν θέλω να κάνεις εσύ κάτι. Θέλω απλώς να σου πω τι έγινε.";return age==="kindergarten"?"Μου είπε δυνατά ότι δεν άκουγα και όλα τα παιδιά με κοιτούσαν.":age==="adolescent"?"Η καθηγήτρια είπε μπροστά σε όλους ότι δεν προσπαθώ αρκετά και ένιωσα ότι με εξευτέλισε.":"Η κυρία μου είπε μπροστά σε όλους ότι δεν προσπαθώ αρκετά.";}
+function chooseFirst(i){firstChoice=i;log("first_choice",first[i]);stage="reaction";text("Η αντίδραση του παιδιού",reaction(i));buttons(["Συνέχεια","",""],secondStep);}
+function secondStep(){stage="second";text("Μια δεύτερη ευκαιρία","Το παιδί συνεχίζει:\n«"+reaction(firstChoice)+"»\n\nΠώς θα απαντούσες τώρα;");buttons(second,i=>{secondChoice=i;log("second_choice",second[i]);reflection();});}
+function reflection(){stage="reflection";let f=secondChoice===1?"Η απάντηση αναγνωρίζει το συναίσθημα και αφήνει χώρο στο παιδί να εκφραστεί.":secondChoice===0?"Ίσως το παιδί νιώθει ότι το συναίσθημά του δεν αναγνωρίστηκε.":"Ίσως το παιδί αισθάνεται ότι πρέπει να απολογηθεί.";text("Σκέψου την επικοινωνία",f+"\n\nΤι θα μπορούσες να δοκιμάσεις στην καθημερινότητά σου;");buttons(["Ολοκλήρωση","",""],finish);}
+function finish(){stage="end";log("complete","yes");text("Ολοκλήρωση","Ευχαριστούμε για τη συμμετοχή. Εξήγαγε το CSV για να αποθηκεύσεις τις επιλογές.");buttons(["Εξαγωγή CSV","",""],download);}
+function download(){let csv="event,value,age,elapsed\n"+events.map(e=>[e.event,e.value,e.age,e.elapsed].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="parent-perspective-demo.csv";a.click();URL.revokeObjectURL(a.href);}
+AFRAME.registerComponent("gaze-choice",{schema:{index:{type:"int",default:0}},init(){this.el.addEventListener("click",()=>{if(this.el.getAttribute("visible")&&window.action){if(stage==="parent"||stage==="second")window.action(this.data.index);else if(this.data.index===0)window.action();}});this.el.addEventListener("mouseenter",()=>this.el.setAttribute("material","color","#3b829b"));this.el.addEventListener("mouseleave",()=>this.el.setAttribute("material","color","#245b73"));}});
+
+const sceneEl = document.querySelector("a-scene");
+sceneEl.addEventListener("loaded", () => {
+  bindLabelTexture("title", "cv-title");
+  bindLabelTexture("message", "cv-message");
+  bindLabelTexture("l0", "cv-l0");
+  bindLabelTexture("l1", "cv-l1");
+  bindLabelTexture("l2", "cv-l2");
+  if (stage === "intro") intro();
+});
+
+function start(){age=$("age").value;started=performance.now();$("start").style.display="none";intro();}
+$("start360").onclick=start;
+$("startvr").onclick=async()=>{start();try{await document.querySelector("a-scene").enterVR();}catch(e){$("start").style.display="block";alert("Δεν ενεργοποιήθηκε WebXR VR. Δοκίμασε HTTPS σε Chrome Android. Μπορείς να δοκιμάσεις πρώτα τη λειτουργία 360°.");}};
+</script></body></html>
