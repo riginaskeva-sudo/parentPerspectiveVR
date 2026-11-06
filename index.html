@@ -110,38 +110,62 @@ function pauseActiveAudio() {
   }
 }
 
-function playNarration(id) {
-  narrationSequenceToken++;
+function playNarration(id, onComplete = () => {}) {
+  const token = ++narrationSequenceToken;
   pauseActiveAudio();
   const audio = document.getElementById(id);
-  if (!audio) return;
+  if (!audio) { onComplete(); return; }
   activeNarration = audio;
   audio.currentTime = 0;
+  let completed = false;
+  const finish = () => {
+    if (completed || token !== narrationSequenceToken) return;
+    completed = true;
+    audio.onended = null;
+    audio.onerror = null;
+    activeNarration = null;
+    onComplete();
+  };
+  audio.onended = finish;
+  audio.onerror = finish;
   const playback = audio.play();
   if (playback && typeof playback.catch === "function") {
-    playback.catch(error => console.warn("Audio playback was blocked or unavailable:", error));
+    playback.catch(error => {
+      console.warn("Audio playback was blocked or unavailable:", error);
+      finish();
+    });
   }
 }
 
-function playNarrationSequence(ids) {
+function playNarrationSequence(ids, onComplete = () => {}) {
   const token = ++narrationSequenceToken;
   pauseActiveAudio();
   let index = 0;
 
   function playNext() {
-    if (token !== narrationSequenceToken || index >= ids.length) return;
+    if (token !== narrationSequenceToken) return;
+    if (index >= ids.length) { activeNarration = null; onComplete(); return; }
     const audio = document.getElementById(ids[index++]);
     if (!audio) { playNext(); return; }
     pauseActiveAudio();
     activeNarration = audio;
     audio.currentTime = 0;
-    audio.onended = playNext;
-    audio.onerror = playNext;
+    let completed = false;
+    const finish = () => {
+      if (completed || token !== narrationSequenceToken) return;
+      completed = true;
+      audio.onended = null;
+      audio.onerror = null;
+      activeNarration = null;
+      playNext();
+    };
+    audio.onended = finish;
+    audio.onerror = finish;
     const playback = audio.play();
     if (playback && typeof playback.catch === "function") {
       playback.catch(error => {
         console.warn("Audio playback was blocked or unavailable:", error);
-        if (token === narrationSequenceToken) playNext();
+        finish();
       });
     }
   }
@@ -268,21 +292,21 @@ function move(parent){$("rig").setAttribute("animation__pos","property:position;
 function intro(){
   stage="intro";
   text("", "");
-  playNarration("narrator01");
-  buttons(["Έναρξη","",""],childView);
+  buttons([],()=>{});
+  playNarration("narrator01",()=>buttons(["Έναρξη","",""],childView));
 }
 function childView(){
   stage="child";move(false);text("", "");
-  // Πρώτα ακούγεται η οδηγία και μετά η αρχική δήλωση του παιδιού της επιλεγμένης ηλικίας.
+  // Σειρά: οδηγία αλλαγής οπτικής και έπειτα η αρχική δήλωση της επιλεγμένης ηλικίας.
   const childInitial = age==="kindergarten" ? "kindergarten01" :
                        age==="adolescent" ? "adolescent01" : "primary01";
-  playNarrationSequence(["narrator02", childInitial]);
-  buttons(["Αλλαγή οπτικής γωνίας","",""],parentView);
+  buttons([],()=>{});
+  playNarrationSequence(["narrator02", childInitial],()=>buttons(["Αλλαγή οπτικής γωνίας","",""],parentView));
 }
 function parentView(){
   stage="parent";move(true);text("", "");
-  playNarration("narrator03");
-  buttons(first,chooseFirst);
+  buttons([],()=>{});
+  playNarration("narrator03",()=>buttons(first,chooseFirst));
 }
 function reaction(i){
   if(i===0)return "Καλά, άστο. Δεν θέλω να σου πω.";
@@ -295,26 +319,27 @@ function chooseFirst(i){
   const prefix = age==="kindergarten" ? "kindergarten" :
                  age==="adolescent" ? "adolescent" : "primary";
   const childReaction = prefix + (i===0 ? "02" : i===1 ? "03" : "04");
-  // Μετά την αντίδραση του παιδιού ακούγεται η οδηγία συνέχειας.
-  playNarrationSequence([childReaction, "narrator04"]);
-  buttons(["Συνέχεια","",""],secondStep);
+  // Σειρά: αντίδραση παιδιού και μετά οδηγία συνέχειας. Το κουμπί ενεργοποιείται στο τέλος.
+  buttons([],()=>{});
+  playNarrationSequence([childReaction, "narrator04"],()=>buttons(["Συνέχεια","",""],secondStep));
 }
 function secondStep(){
   stage="second";text("", "");
-  playNarration("narrator05");
-  buttons(second,i=>{secondChoice=i;log("second_choice",second[i]);reflection();});
+  buttons([],()=>{});
+  playNarration("narrator05",()=>buttons(second,i=>{secondChoice=i;log("second_choice",second[i]);reflection();}));
 }
 function reflection(){
   stage="reflection";
   let f=secondChoice===1?"Η απάντηση αναγνωρίζει το συναίσθημα και αφήνει χώρο στο παιδί να εκφραστεί.":secondChoice===0?"Ίσως το παιδί νιώθει ότι το συναίσθημά του δεν αναγνωρίστηκε.":"Ίσως το παιδί αισθάνεται ότι πρέπει να απολογηθεί.";
   text("", "");
-  playNarration("narrator06");
-  buttons(["Ολοκλήρωση","",""],finish);
+  buttons([],()=>{});
+  playNarration("narrator06",()=>buttons(["Ολοκλήρωση","",""],finish));
 }
 function finish(){
   stage="end";log("complete","yes");text("", "");
-  playNarration("narrator07");
-  buttons(["Εξαγωγή CSV","",""],download);releaseScreenWakeLock();
+  buttons([],()=>{});
+  playNarration("narrator07",()=>buttons(["Εξαγωγή CSV","",""],download));
+  releaseScreenWakeLock();
 }
 function download(){let csv="event,value,age,elapsed\n"+events.map(e=>[e.event,e.value,e.age,e.elapsed].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="parent-perspective-demo.csv";a.click();URL.revokeObjectURL(a.href);}
 AFRAME.registerComponent("gaze-choice",{schema:{index:{type:"int",default:0}},init(){this.el.addEventListener("click",()=>{if(this.el.getAttribute("visible")&&window.action){if(stage==="parent"||stage==="second")window.action(this.data.index);else if(this.data.index===0)window.action();}});this.el.addEventListener("mouseenter",()=>this.el.setAttribute("material","color","#3b829b"));this.el.addEventListener("mouseleave",()=>this.el.setAttribute("material","color","#245b73"));}});
