@@ -276,8 +276,12 @@ function move(parent){$("rig").setAttribute("animation__pos","property:position;
 function intro(){
   stage="intro";
   text("", "");
-  playNarration("narrator01");
-  buttons(["Έναρξη","", ""],childView);
+  // Keep the in-world Start button hidden while the introduction is playing.
+  buttons(["", "", ""],()=>{});
+  playNarrationSequence(["narrator01"], () => {
+    if (stage !== "intro") return;
+    buttons(["Έναρξη","", ""],childView);
+  });
 }
 function childView(){
   stage="child";move(false);text("", "");
