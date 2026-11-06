@@ -110,62 +110,46 @@ function pauseActiveAudio() {
   }
 }
 
-function playNarration(id, onComplete = () => {}) {
-  const token = ++narrationSequenceToken;
+function playNarration(id) {
+  narrationSequenceToken++;
   pauseActiveAudio();
   const audio = document.getElementById(id);
-  if (!audio) { onComplete(); return; }
+  if (!audio) return;
   activeNarration = audio;
   audio.currentTime = 0;
-  let completed = false;
-  const finish = () => {
-    if (completed || token !== narrationSequenceToken) return;
-    completed = true;
-    audio.onended = null;
-    audio.onerror = null;
-    activeNarration = null;
-    onComplete();
-  };
-  audio.onended = finish;
-  audio.onerror = finish;
   const playback = audio.play();
   if (playback && typeof playback.catch === "function") {
-    playback.catch(error => {
-      console.warn("Audio playback was blocked or unavailable:", error);
-      finish();
-    });
+    playback.catch(error => console.warn("Audio playback was blocked or unavailable:", error));
   }
 }
 
-function playNarrationSequence(ids, onComplete = () => {}) {
+function playNarrationSequence(ids, onComplete) {
   const token = ++narrationSequenceToken;
   pauseActiveAudio();
   let index = 0;
 
   function playNext() {
     if (token !== narrationSequenceToken) return;
-    if (index >= ids.length) { activeNarration = null; onComplete(); return; }
+    if (index >= ids.length) {
+      activeNarration = null;
+      if (typeof onComplete === "function") onComplete();
+      return;
+    }
     const audio = document.getElementById(ids[index++]);
     if (!audio) { playNext(); return; }
     pauseActiveAudio();
     activeNarration = audio;
     audio.currentTime = 0;
-    let completed = false;
-    const finish = () => {
-      if (completed || token !== narrationSequenceToken) return;
-      completed = true;
-      audio.onended = null;
-      audio.onerror = null;
-      activeNarration = null;
+    audio.onended = playNext;
+    audio.onerror = () => {
+      console.warn("Audio could not be played:", audio.id);
       playNext();
     };
-    audio.onended = finish;
-    audio.onerror = finish;
     const playback = audio.play();
     if (playback && typeof playback.catch === "function") {
       playback.catch(error => {
         console.warn("Audio playback was blocked or unavailable:", error);
-        finish();
+        if (token === narrationSequenceToken) playNext();
       });
     }
   }
@@ -292,21 +276,36 @@ function move(parent){$("rig").setAttribute("animation__pos","property:position;
 function intro(){
   stage="intro";
   text("", "");
-  buttons([],()=>{});
-  playNarration("narrator01",()=>buttons(["Έναρξη","",""],childView));
+  playNarration("narrator01");
+  buttons(["Έναρξη","", ""],childView);
 }
 function childView(){
   stage="child";move(false);text("", "");
-  // Σειρά: οδηγία αλλαγής οπτικής και έπειτα η αρχική δήλωση της επιλεγμένης ηλικίας.
+  // Πρώτα ακούγεται η οδηγία αλλαγής οπτικής. Μετά ο χρήστης πατά το κουμπί
+  // για να περάσει στην οπτική του παιδιού και να ακούσει την αρχική του δήλωση.
+  playNarrationSequence(["narrator02"], () => {
+    if (stage !== "child") return;
+    buttons(["Αλλαγή οπτικής γωνίας για το παιδί","", ""],playChildInitial);
+  });
+  buttons(["", "", ""],()=>{});
+}
+function playChildInitial(){
+  stage="childAudio";text("", "");
   const childInitial = age==="kindergarten" ? "kindergarten01" :
                        age==="adolescent" ? "adolescent01" : "primary01";
-  buttons([],()=>{});
-  playNarrationSequence(["narrator02", childInitial],()=>buttons(["Αλλαγή οπτικής γωνίας","",""],parentView));
+  playNarrationSequence([childInitial], () => {
+    if (stage === "childAudio") parentView();
+  });
+  buttons(["", "", ""],()=>{});
 }
 function parentView(){
-  stage="parent";move(true);text("", "");
-  buttons([],()=>{});
-  playNarration("narrator03",()=>buttons(first,chooseFirst));
+  stage="parentIntro";move(true);text("", "");
+  playNarrationSequence(["narrator03"], () => {
+    if (stage !== "parentIntro") return;
+    stage="parent";
+    buttons(first,chooseFirst);
+  });
+  buttons(["", "", ""],()=>{});
 }
 function reaction(i){
   if(i===0)return "Καλά, άστο. Δεν θέλω να σου πω.";
@@ -319,27 +318,28 @@ function chooseFirst(i){
   const prefix = age==="kindergarten" ? "kindergarten" :
                  age==="adolescent" ? "adolescent" : "primary";
   const childReaction = prefix + (i===0 ? "02" : i===1 ? "03" : "04");
-  // Σειρά: αντίδραση παιδιού και μετά οδηγία συνέχειας. Το κουμπί ενεργοποιείται στο τέλος.
-  buttons([],()=>{});
-  playNarrationSequence([childReaction, "narrator04"],()=>buttons(["Συνέχεια","",""],secondStep));
+  // Μετά την αντίδραση του παιδιού ακούγεται η οδηγία συνέχειας.
+  playNarrationSequence([childReaction, "narrator04"]);
+  buttons(["Συνέχεια","",""],secondStep);
 }
 function secondStep(){
   stage="second";text("", "");
-  buttons([],()=>{});
-  playNarration("narrator05",()=>buttons(second,i=>{secondChoice=i;log("second_choice",second[i]);reflection();}));
+  playNarrationSequence(["narrator05"], () => {
+    if (stage === "second") buttons(second,i=>{secondChoice=i;log("second_choice",second[i]);reflection();});
+  });
+  buttons(["", "", ""],()=>{});
 }
 function reflection(){
   stage="reflection";
   let f=secondChoice===1?"Η απάντηση αναγνωρίζει το συναίσθημα και αφήνει χώρο στο παιδί να εκφραστεί.":secondChoice===0?"Ίσως το παιδί νιώθει ότι το συναίσθημά του δεν αναγνωρίστηκε.":"Ίσως το παιδί αισθάνεται ότι πρέπει να απολογηθεί.";
   text("", "");
-  buttons([],()=>{});
-  playNarration("narrator06",()=>buttons(["Ολοκλήρωση","",""],finish));
+  playNarration("narrator06");
+  buttons(["Ολοκλήρωση","",""],finish);
 }
 function finish(){
   stage="end";log("complete","yes");text("", "");
-  buttons([],()=>{});
-  playNarration("narrator07",()=>buttons(["Εξαγωγή CSV","",""],download));
-  releaseScreenWakeLock();
+  playNarration("narrator07");
+  buttons(["Εξαγωγή CSV","",""],download);releaseScreenWakeLock();
 }
 function download(){let csv="event,value,age,elapsed\n"+events.map(e=>[e.event,e.value,e.age,e.elapsed].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="parent-perspective-demo.csv";a.click();URL.revokeObjectURL(a.href);}
 AFRAME.registerComponent("gaze-choice",{schema:{index:{type:"int",default:0}},init(){this.el.addEventListener("click",()=>{if(this.el.getAttribute("visible")&&window.action){if(stage==="parent"||stage==="second")window.action(this.data.index);else if(this.data.index===0)window.action();}});this.el.addEventListener("mouseenter",()=>this.el.setAttribute("material","color","#3b829b"));this.el.addEventListener("mouseleave",()=>this.el.setAttribute("material","color","#245b73"));}});
@@ -359,4 +359,3 @@ function start(){stopNarration();age=$("age").value;const rooms={kindergarten:"#
 $("start360").onclick=start;
 $("startvr").onclick=async()=>{start();try{await document.querySelector("a-scene").enterVR();}catch(e){$("start").style.display="block";alert("Δεν ενεργοποιήθηκε WebXR VR. Δοκίμασε HTTPS σε Chrome Android. Μπορείς να δοκιμάσεις πρώτα τη λειτουργία 360°.");}};
 </script></body></html>
-
